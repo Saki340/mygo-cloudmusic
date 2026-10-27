@@ -51,6 +51,7 @@ func (a *app) changed() {
 
 func (a *app) settingsView(c *ui.Context) {
 	t := *c.Theme()
+	a.settings.applyFont(&t)
 	p := paletteFor(&t)
 	t.Accent, t.AccentText = p.accent, p.onAccent
 	c.SetTheme(&t)
@@ -196,6 +197,35 @@ func (a *app) settingsView(c *ui.Context) {
 				}
 				if segmented(c.Key("appearance"), &i, "跟随系统", "浅色", "深色") {
 					s.Appearance = modes[i]
+					a.changed()
+				}
+			})
+			row("字体", "选择已安装的字体，留空使用系统默认字体", func() {
+				names := systemFonts()
+				labels := make([]string, 0, len(names)+1)
+				labels = append(labels, "系统默认")
+				labels = append(labels, names...)
+				chosen := s.Font
+				if chosen == "" {
+					chosen = "系统默认"
+				} else {
+					found := false
+					for _, name := range names {
+						if name == chosen {
+							found = true
+							break
+						}
+					}
+					if !found {
+						labels = append(labels, chosen)
+					}
+				}
+				if ui.Select(c.Key("font"), &chosen, labels).Label("字体").Width(180).Changed() {
+					if chosen == "系统默认" {
+						s.Font = ""
+					} else {
+						s.Font = chosen
+					}
 					a.changed()
 				}
 			})
