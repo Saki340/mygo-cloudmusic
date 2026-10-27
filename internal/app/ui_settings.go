@@ -2,6 +2,7 @@ package app
 
 import (
 	"runtime"
+	"slices"
 	"time"
 
 	"github.com/egoist/mygo"
@@ -17,6 +18,7 @@ func (a *app) openSettings() {
 		return
 	}
 	a.measureCache()
+	go systemFonts() // list the fonts while the window opens, not in its first frame
 	a.settingsWin = mygo.NewWindow(mygo.WindowOptions{
 		Title:           "设置",
 		Width:           560,
@@ -208,17 +210,9 @@ func (a *app) settingsView(c *ui.Context) {
 				chosen := s.Font
 				if chosen == "" {
 					chosen = "系统默认"
-				} else {
-					found := false
-					for _, name := range names {
-						if name == chosen {
-							found = true
-							break
-						}
-					}
-					if !found {
-						labels = append(labels, chosen)
-					}
+				} else if !slices.Contains(names, chosen) {
+					// A saved font no longer installed stays chosen.
+					labels = append(labels, chosen)
 				}
 				if ui.Select(c.Key("font"), &chosen, labels).Label("字体").Width(180).Changed() {
 					if chosen == "系统默认" {
